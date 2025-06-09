@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证码生成工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a4d8e, #4a86e8);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(0, 0, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            max-width: 700px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-size: 28px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+        }
+        
+        .input-container {
+            margin: 25px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4facfe;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid transparent;
+            background: rgba(0, 10, 30, 0.8);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            background: rgba(10, 20, 50, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result-heading {
+            text-align: center;
+            margin-top: 0;
+            font-size: 22px;
+            color: #4facfe;
+        }
+        
+        .result-content {
+            padding: 10px;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 2px;
+            margin: 15px 0;
+            color: #00f2fe;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-block::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 5px;
+            background: linear-gradient(to bottom, #4facfe, #00f2fe);
+        }
+        
+        .server-config {
+            margin-top: 20px;
+            background: rgba(0, 10, 30, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .config-item {
+            background: rgba(79, 172, 254, 0.2);
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .config-value {
+            display: block;
+            font-weight: bold;
+            font-size: 20px;
+            margin-top: 5px;
+            color: #00f2fe;
+        }
+        
+        .config-label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .mode-title {
+            color: #4facfe;
+            text-align: center;
+            margin: 20px 0 10px;
+            font-size: 18px;
+        }
+        
+        .mode-description {
+            text-align: center;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+        
+        .copied-badge {
+            display: inline-block;
+            background: rgba(0, 242, 254, 0.2);
+            color: #00f2fe;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-left: 15px;
+            animation: fadeOut 2s forwards;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-100%); }
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-size: 14px;
+            background: rgba(0, 242, 254, 0.2);
+        }
+        
+        .length-info {
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .config-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .config-item {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>用户验证码生成工具</h1>
+        
+        <div class="input-container">
+            <label for="user-id">请输入用户ID（格式示例：KU_hjXTcooF）</label>
+            <input type="text" id="user-id" placeholder="KU_hjXTcooF" autocomplete="off">
+        </div>
+        
+        <button id="generate-btn" class="btn">生成验证码</button>
+        
+        <div id="result" class="result">
+            <h2 class="result-heading">验证码生成结果</h2>
+            <div class="result-content">
+                <p>用户ID: <strong id="user-id-display"></strong></p>
+                
+                <div class="code-block">
+                    生成的验证码: <span id="verification-code"></span>
+                    <span id="clipboard-status" class="status"></span>
+                </div>
+                
+                <p class="length-info">长度验证: <strong id="code-length">0</strong>位</p>
+                
+                <div class="server-config">
+                    <h3 class="mode-title">联机模式配置（前5位）</h3>
+                    <div class="config-grid" id="online-config"></div>
+                    
+                    <h3 class="mode-title">离线模式配置（后5位）</h3>
+                    <div class="config-grid" id="offline-config"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userIdInput = document.getElementById('user-id');
+            const generateBtn = document.getElementById('generate-btn');
+            const resultSection = document.getElementById('result');
+            const userIdDisplay = document.getElementById('user-id-display');
+            const verificationCodeDisplay = document.getElementById('verification-code');
+            const codeLengthDisplay = document.getElementById('code-length');
+            const clipboardStatus = document.getElementById('clipboard-status');
+            const onlineConfig = document.getElementById('online-config');
+            const offlineConfig = document.getElementById('offline-config');
+            
+            // 生成验证码的函数
+            function generateVerificationCode(userId) {
+                // 步骤1: 去掉用户ID前缀'KU_'
+                let processedId = userId.replace("KU_", "");
+                
+                // 步骤2: 加密计算
+                let encrypted = 0;
+                for (let i = 0; i < processedId.length; i++) {
+                    const char = processedId[i];
+                    const asciiVal = char.charCodeAt(0);
+                    // 核心加密算法: (当前值+ASCII) * 7 + (ASCII % 16)
+                    encrypted = (encrypted + asciiVal) * 7 + (asciiVal % 16);
+                }
+                
+                // 将加密值转换为字符串
+                let encryptedStr = String(encrypted);
+                
+                // 处理长度不足的情况：左侧补0到9位
+                if (encryptedStr.length < 9) {
+                    encryptedStr = '0'.repeat(9 - encryptedStr.length) + encryptedStr;
+                }
+                
+                // 步骤3: 生成验证码
+                // 前5位联机模式
+                const onlinePart = encryptedStr.substring(0, 5);
+                // 后5位离线模式（从第5位开始取5个字符）
+                const offlinePart = encryptedStr.substring(4, 9);
+                
+                // 拼接完整验证码
+                return onlinePart + offlinePart;
+            }
+            
+            // 生成配置项HTML
+            function generateConfigHTML(code, mode) {
+                const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+                const startIndex = (mode === 'online') ? 0 : 5;
+                const configType = (mode === 'online') ? '联机模式' : '离线模式';
+                
+                let html = '';
+                for (let i = 0; i < 5; i++) {
+                    const position = startIndex + i;
+                    html += `
+                    <div class="config-item">
+                        <span class="config-label">${labels[position]}</span>
+                        <span class="config-value">${code[position]}</span>
+                    </div>
+                    `;
+                }
+                return html;
+            }
+            
+            // 复制到剪贴板的函数
+            async function copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return {success: true, message: "【已复制到剪贴板】"};
+                } catch (err) {
+                    return {success: false, message: `【剪贴板复制失败：${err}】`};
+                }
+            }
+            
+            // 生成验证码按钮点击事件
+            generateBtn.addEventListener('click', async function() {
+                const userId = userIdInput.value.trim();
+                
+                // 验证输入是否有效
+                if (!userId) {
+                    alert("输入不能为空！");
+                    return;
+                }
+                
+                // 如果输入不以"KU_"开头，自动添加
+                const finalUserId = userId.startsWith('KU_') ? userId : 'KU_' + userId;
+                
+                // 生成验证码
+                const verificationCode = generateVerificationCode(finalUserId);
+                
+                // 复制到剪贴板
+                const copyResult = await copyToClipboard(verificationCode);
+                
+                // 显示结果
+                userIdDisplay.textContent = finalUserId;
+                verificationCodeDisplay.textContent = verificationCode;
+                codeLengthDisplay.textContent = verificationCode.length;
+                clipboardStatus.textContent = copyResult.message;
+                clipboardStatus.style.color = copyResult.success ? '#00f2fe' : '#ff4d4d';
+                
+                // 生成服务器配置建议
+                onlineConfig.innerHTML = generateConfigHTML(verificationCode, 'online');
+                offlineConfig.innerHTML = generateConfigHTML(verificationCode, 'offline');
+                
+                // 显示结果区域
+                resultSection.style.display = 'block';
+                
+                // 自动滚动到结果区域
+                resultSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 按回车键也能触发生成
+            userIdInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    generateBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
