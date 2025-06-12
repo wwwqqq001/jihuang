@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DST Mod 高级工具集 (终极版)</title>
+    <title>DST Mod 高级工具集 (终极整合版)</title>
     <style>
         :root {
             --gradient-start: #4facfe;
@@ -32,34 +32,22 @@
         }
 
         .container {
-            background: var(--bg-dark-rgba);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color-rgba);
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            padding: 30px 40px;
-            max-width: 700px;
-            width: 100%;
+            background: var(--bg-dark-rgba); backdrop-filter: blur(12px); border: 1px solid var(--border-color-rgba);
+            border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            padding: 30px 40px; max-width: 700px; width: 100%;
         }
 
         .title-group h1 {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 700;
+            text-align: center; font-size: 28px; font-weight: 700;
             background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px var(--glow-color-rgba);
-            margin-bottom: 5px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px var(--glow-color-rgba); margin-bottom: 5px;
         }
         .title-group p { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
 
         .section h2 {
-            font-size: 20px;
-            color: var(--gradient-start);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color-rgba);
+            font-size: 20px; color: var(--gradient-start); margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border-color-rgba);
         }
 
         .input-group { margin-bottom: 20px; }
@@ -88,10 +76,7 @@
 
         .separator { border: 0; height: 1px; background-image: linear-gradient(to right, transparent, var(--gradient-start), transparent); margin: 40px 0; }
 
-        /* --- Results Area --- */
-        #results-area {
-            display: none; margin-top: 30px; animation: fadeIn 0.5s ease-out;
-        }
+        #results-area { display: none; margin-top: 30px; animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .result-panel, .final-code-panel { margin-bottom: 15px; }
@@ -105,8 +90,7 @@
         }
         .final-code-panel .result-label { color: var(--text-primary); font-size: 18px; margin-bottom: 10px; }
         .final-code-panel .result-value {
-            font-size: clamp(36px, 10vw, 52px); /* Responsive font size */
-            font-family: 'Courier New', monospace; letter-spacing: 5px; cursor: pointer;
+            font-size: clamp(36px, 10vw, 52px); font-family: 'Courier New', monospace; letter-spacing: 5px; cursor: pointer;
             background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             text-shadow: 0 0 15px var(--glow-color-rgba); font-weight: bold;
@@ -127,25 +111,16 @@
         }
         .copy-status.visible { opacity: 1; }
 
-        .config-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px; }
-        .config-item { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; text-align: center; }
-        .config-label { display: block; font-size: 14px; color: var(--text-secondary); }
-        .config-value { display: block; font-size: 24px; font-weight: 600; color: var(--gradient-start); }
-
-        /* --- Footer Section --- */
-        .footer-actions { display: flex; gap: 20px; }
-        .footer-group { flex: 1; }
+        .footer-actions { display: flex; gap: 20px; flex-wrap: wrap; }
+        .footer-group { flex: 1; min-width: 250px; }
         #currentLinkDisplay { font-size: 12px; color: var(--text-secondary); margin-top: 8px; word-break: break-all; text-align: center; }
 
-        /* --- Responsive Design for Mobile --- */
         @media (max-width: 768px) {
             body { padding: 15px 10px; }
             .container { padding: 20px; }
             .title-group h1 { font-size: 24px; }
-            .button-group, .footer-actions { flex-direction: column; }
-            .config-grid { grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); }
-            .result-panel { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .result-value { align-self: flex-end; }
+            .button-group { flex-direction: column; }
+            .footer-actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -160,36 +135,35 @@
             <h2>步骤 1: 输入信息</h2>
             <div class="input-group">
                 <label for="errorCodeInput">错误码 <small>(例如: A6nar1W0)</small></label>
-                <input type="text" id="errorCodeInput" placeholder="从服务器日志获取">
+                <input type="text" id="errorCodeInput" placeholder="优先使用此输入">
             </div>
             <div class="input-group">
                 <label for="kleiIdInput">科雷ID <small>(例如: KU_HkU4huTw)</small></label>
-                <input type="text" id="kleiIdInput" placeholder="可由错误码自动填充">
+                <input type="text" id="kleiIdInput" placeholder="当错误码为空时使用">
             </div>
             <div class="button-group">
-                <button id="decodeButton" class="btn">解密并生成</button>
-                <button id="generateButton" class="btn btn-secondary">独立生成</button>
+                <button id="processButton" class="btn">一键生成</button>
             </div>
         </section>
 
         <div id="results-area">
-            <div id="finalCodePanel" class="final-code-panel">
+            <div class="final-code-panel">
                 <div class="result-label">最终10位验证码<span class="copy-status" id="finalCodeCopyStatus"></span></div>
                 <strong class="result-value" id="finalCodeDisplay"></strong>
             </div>
-            <div id="configPanel" class="result-panel" style="flex-direction:column; align-items:flex-start;">
-                 <div class="result-label">Mod 配置项 (A-J)</div>
-                 <div class="config-grid" id="configGrid"></div>
-            </div>
             <div id="decodedIdPanel" class="result-panel">
                 <div class="result-label">原始科雷ID</div>
-                <strong class="result-value" id="decodedIdDisplay"></strong>
-                <span class="copy-status" id="decodedIdCopyStatus"></span>
+                <div>
+                    <strong class="result-value" id="decodedIdDisplay"></strong>
+                    <span class="copy-status" id="decodedIdCopyStatus"></span>
+                </div>
             </div>
             <div id="predictedErrorCodePanel" class="result-panel">
                 <div class="result-label">预测错误码</div>
-                <strong class="result-value" id="predictedErrorCodeDisplay"></strong>
-                <span class="copy-status" id="predictedErrorCodeCopyStatus"></span>
+                 <div>
+                    <strong class="result-value" id="predictedErrorCodeDisplay"></strong>
+                    <span class="copy-status" id="predictedErrorCodeCopyStatus"></span>
+                </div>
             </div>
         </div>
 
@@ -199,9 +173,12 @@
             <h2>步骤 2: 更多服务</h2>
             <div class="footer-actions">
                 <div class="footer-group">
-                    <button id="customizeButton" class="btn">定制服务端</button>
+                    <div class="button-group">
+                        <button id="customizeButton" class="btn">定制服务端</button>
+                        <button id="copyLinkButton" class="btn btn-secondary">复制订阅链接</button>
+                    </div>
                     <div id="currentLinkDisplay"></div>
-                    <div style="text-align:center;"><span class="copy-status" id="customizeCopyStatus"></span></div>
+                    <div style="text-align:center; height: 20px;"><span class="copy-status" id="customizeCopyStatus"></span></div>
                 </div>
                 <div class="footer-group">
                     <input type="text" id="workshopIdInput" placeholder="输入订阅ID或完整链接">
@@ -224,12 +201,10 @@
         const el = {
             errorCodeInput: document.getElementById('errorCodeInput'),
             kleiIdInput: document.getElementById('kleiIdInput'),
-            decodeButton: document.getElementById('decodeButton'),
-            generateButton: document.getElementById('generateButton'),
+            processButton: document.getElementById('processButton'), // Merged button
             resultsArea: document.getElementById('results-area'),
             finalCodeDisplay: document.getElementById('finalCodeDisplay'),
             finalCodeCopyStatus: document.getElementById('finalCodeCopyStatus'),
-            configGrid: document.getElementById('configGrid'),
             decodedIdPanel: document.getElementById('decodedIdPanel'),
             decodedIdDisplay: document.getElementById('decodedIdDisplay'),
             decodedIdCopyStatus: document.getElementById('decodedIdCopyStatus'),
@@ -237,6 +212,7 @@
             predictedErrorCodeDisplay: document.getElementById('predictedErrorCodeDisplay'),
             predictedErrorCodeCopyStatus: document.getElementById('predictedErrorCodeCopyStatus'),
             customizeButton: document.getElementById('customizeButton'),
+            copyLinkButton: document.getElementById('copyLinkButton'),
             currentLinkDisplay: document.getElementById('currentLinkDisplay'),
             customizeCopyStatus: document.getElementById('customizeCopyStatus'),
             workshopIdInput: document.getElementById('workshopIdInput'),
@@ -260,11 +236,6 @@
             el.predictedErrorCodePanel.style.display = 'none';
             if (results.finalCode) {
                 el.finalCodeDisplay.textContent = results.finalCode;
-                const labels = ['A','B','C','D','E','F','G','H','I','J'];
-                el.configGrid.innerHTML = '';
-                for(let i = 0; i < 10; i++) {
-                    el.configGrid.innerHTML += `<div class="config-item"><span class="config-label">${labels[i]}</span><span class="config-value">${results.finalCode[i]}</span></div>`;
-                }
             }
             if (results.decodedId) {
                 el.decodedIdDisplay.textContent = results.decodedId;
@@ -288,34 +259,43 @@
             } catch (err) { console.error(`复制失败: ${err}`); statusElement.textContent = '复制失败'; }
         }
         
-        // --- Event Handlers ---
-        el.decodeButton.addEventListener('click', () => {
+        // --- Smart "Process" Button Event Handler ---
+        el.processButton.addEventListener('click', () => {
             const errorCode = el.errorCodeInput.value.trim();
-            if (!errorCode) { alert('请输入错误码！'); return; }
-            const fullKleiId = "KU_" + deobfuscateId(errorCode);
-            el.kleiIdInput.value = fullKleiId;
-            const finalCode = generateVerificationCode(fullKleiId);
-            if (!finalCode) return;
-            updateUI({ decodedId: fullKleiId, predictedError: errorCode, finalCode: finalCode });
-            copyToClipboard(finalCode, el.finalCodeCopyStatus, '验证码已自动复制!');
-        });
-        el.generateButton.addEventListener('click', () => {
             const kleiId = el.kleiIdInput.value.trim();
-            if (!kleiId || !kleiId.toUpperCase().startsWith('KU_')) { alert('请输入有效的科雷ID (必须以 KU_ 开头)！'); return; }
-            const finalCode = generateVerificationCode(kleiId);
-            if (!finalCode) return;
-            const predictedError = obfuscateId(kleiId.substring(3));
-            updateUI({ predictedError: predictedError, finalCode: finalCode });
-            copyToClipboard(finalCode, el.finalCodeCopyStatus, '验证码已自动复制!');
+
+            if (errorCode) {
+                // Priority 1: Process based on Error Code
+                const fullKleiId = "KU_" + deobfuscateId(errorCode);
+                el.kleiIdInput.value = fullKleiId; // Auto-fill the other input
+                const finalCode = generateVerificationCode(fullKleiId);
+                if (!finalCode) return;
+                updateUI({ decodedId: fullKleiId, predictedError: errorCode, finalCode: finalCode });
+                copyToClipboard(finalCode, el.finalCodeCopyStatus, '验证码已自动复制!');
+            } else if (kleiId) {
+                // Priority 2: Process based on Klei ID
+                if (!kleiId.toUpperCase().startsWith('KU_')) {
+                    alert('请输入有效的科雷ID (必须以 KU_ 开头)！');
+                    return;
+                }
+                const finalCode = generateVerificationCode(kleiId);
+                if (!finalCode) return;
+                const predictedError = obfuscateId(kleiId.substring(3));
+                updateUI({ predictedError: predictedError, finalCode: finalCode, decodedId: kleiId });
+                copyToClipboard(finalCode, el.finalCodeCopyStatus, '验证码已自动复制!');
+            } else {
+                // Neither field is filled
+                alert('请输入错误码或科雷ID！');
+            }
         });
         
-        // Manual copy listener
+        // --- Manual copy listener for result panels ---
         document.body.addEventListener('click', (e) => {
             let target = e.target;
             if (target.matches('.result-value')) {
                 const text = target.textContent;
                 const statusEl = target.nextElementSibling;
-                if(statusEl && statusEl.classList.contains('copy-status')) {
+                if (statusEl && statusEl.classList.contains('copy-status')) {
                     copyToClipboard(text, statusEl);
                 }
             }
@@ -349,10 +329,12 @@
                 alert('链接已重置为默认值！');
             }
         });
-        el.customizeButton.addEventListener('click', async () => {
-            const urlToOpen = el.customizeButton.dataset.url;
-            await copyToClipboard(urlToOpen, el.customizeCopyStatus, '链接已复制!');
-            setTimeout(() => { window.open(urlToOpen, '_blank'); }, 300);
+        el.customizeButton.addEventListener('click', () => {
+            window.open(el.customizeButton.dataset.url, '_blank');
+        });
+        el.copyLinkButton.addEventListener('click', () => {
+            const urlToCopy = el.customizeButton.dataset.url;
+            copyToClipboard(urlToCopy, el.customizeCopyStatus, '订阅链接已复制!');
         });
 
         // --- Initialize Page ---
