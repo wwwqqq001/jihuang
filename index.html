@@ -3,387 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>验证码生成工具</title>
+    <title>DST Mod 高级工具集 (全功能版)</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --gradient-start: #4facfe;
+            --gradient-end: #00f2fe;
+            --bg-dark-rgba: rgba(0, 0, 20, 0.85);
+            --bg-mid-rgba: rgba(10, 20, 50, 0.5);
+            --bg-light-rgba: rgba(0, 10, 30, 0.8);
+            --glow-color-rgba: rgba(0, 242, 254, 0.4);
+            --border-color-rgba: rgba(255, 255, 255, 0.1);
         }
+        
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        html { scroll-behavior: smooth; }
         
         body {
             background: linear-gradient(135deg, #1a2a6c, #2a4d8e, #4a86e8);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            color: #fff; min-height: 100vh; padding: 20px; margin: 0;
+            display: flex; justify-content: center; align-items: flex-start;
         }
         
         .container {
-            background: rgba(0, 0, 20, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            padding: 30px;
-            max-width: 700px;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-dark-rgba); backdrop-filter: blur(12px); border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); padding: 30px 40px;
+            max-width: 700px; width: 100%; border: 1px solid var(--border-color-rgba);
         }
         
-        h1 {
-            text-align: center;
-            margin-top: 0;
-            font-size: 28px;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+        h1, h2 {
+            text-align: center; margin-top: 0; font-size: 28px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px var(--glow-color-rgba);
         }
+        h2 { font-size: 24px; margin-top: 20px; }
+        h3.result-heading { font-size: 20px; text-align: center; color: var(--gradient-start); }
         
-        .input-container {
-            margin: 25px 0;
-        }
+        .input-group { margin: 25px 0; }
         
         label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4facfe;
+            display: block; margin-bottom: 8px; font-weight: 600; color: var(--gradient-start);
         }
+        label small { font-weight: normal; opacity: 0.7; display: block; margin-top: 4px; }
         
         input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid transparent;
-            background: rgba(0, 10, 30, 0.8);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s ease;
+            width: 100%; padding: 12px 15px; border: 2px solid transparent;
+            background: var(--bg-light-rgba); border-radius: 8px; color: #fff;
+            font-size: 16px; outline: none; transition: all 0.3s ease;
         }
-        
-        input:focus {
-            border-color: #00f2fe;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
-        }
+        input:focus { border-color: var(--gradient-end); box-shadow: 0 0 15px var(--glow-color-rgba); }
         
         .btn {
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            color: #fff;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
-            width: 100%;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            color: #fff; border: none; padding: 12px 25px; font-size: 16px;
+            font-weight: 600; border-radius: 8px; cursor: pointer; display: block;
+            width: 100%; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 10px;
         }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); }
+
+        .helper-text { text-align: center; font-size: 14px; opacity: 0.7; margin: 15px 0 0; }
+
+        .result-section {
+            margin-top: 20px; max-height: 0; opacity: 0; overflow: hidden;
+            transform: translateY(10px);
+            transition: max-height 0.7s ease-out, opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .result-section.visible { max-height: 1000px; opacity: 1; transform: translateY(0); }
+
+        .result-display-panel {
+            background: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 15px 20px;
+            margin: 15px 0; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
+        }
+        .result-display-panel span:first-child { font-size: 16px; opacity: 0.8; margin-right: 15px; }
+        .result-display-panel strong {
+            font-size: 22px; font-family: 'Courier New', monospace; letter-spacing: 2px; cursor: pointer;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 8px var(--glow-color-rgba);
+        }
+
+        .copy-status {
+            display: inline-block; background: rgba(0, 242, 254, 0.2); color: var(--gradient-end);
+            padding: 5px 10px; border-radius: 5px; font-size: 14px; margin-left: 15px;
+            opacity: 0; transition: opacity 0.5s;
+        }
+        .copy-status.visible { opacity: 1; }
         
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .result {
-            margin-top: 30px;
-            background: rgba(10, 20, 50, 0.5);
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-        }
-        
-        .result-heading {
-            text-align: center;
-            margin-top: 0;
-            font-size: 22px;
-            color: #4facfe;
-        }
-        
-        .result-content {
-            padding: 10px;
-        }
-        
-        .code-block {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            text-align: center;
-            letter-spacing: 2px;
-            margin: 15px 0;
-            color: #00f2fe;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .code-block::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 5px;
-            background: linear-gradient(to bottom, #4facfe, #00f2fe);
-        }
-        
-        .server-config {
-            margin-top: 20px;
-            background: rgba(0, 10, 30, 0.5);
-            border-radius: 8px;
-            padding: 15px;
-        }
-        
-        .config-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
+        .config-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
         
         .config-item {
-            background: rgba(79, 172, 254, 0.2);
-            padding: 12px;
-            border-radius: 5px;
-            text-align: center;
+            background: rgba(79, 172, 254, 0.15); padding: 15px; border-radius: 10px; text-align: center;
+            width: 95px; height: 95px; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
-        
+        .config-item:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--glow-color-rgba); border-color: var(--gradient-end); }
+        .config-label { display: block; font-size: 16px; opacity: 0.8; margin-bottom: 8px; }
         .config-value {
-            display: block;
-            font-weight: bold;
-            font-size: 20px;
-            margin-top: 5px;
-            color: #00f2fe;
+            display: block; font-weight: bold; font-size: 32px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 8px var(--glow-color-rgba);
         }
         
-        .config-label {
-            display: block;
-            font-size: 14px;
-            opacity: 0.8;
+        .separator {
+            border: 0; height: 1px;
+            background-image: linear-gradient(to right, transparent, var(--gradient-start), transparent);
+            margin: 40px 0;
         }
-        
-        .mode-title {
-            color: #4facfe;
-            text-align: center;
-            margin: 20px 0 10px;
-            font-size: 18px;
+
+        .highlight-section { box-shadow: 0 0 20px var(--glow-color-rgba), inset 0 0 15px var(--glow-color-rgba); transition: box-shadow 0.5s ease-in-out; border-radius: 15px; }
+
+        /* Styles for Customization Section */
+        .footer-actions { display: flex; align-items: flex-start; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .action-group { flex: 1; min-width: 250px; display: flex; flex-direction: column; }
+        #currentLinkDisplay {
+            font-size: 12px; opacity: 0.6; text-align: center; margin-top: 8px;
+            word-break: break-all;
         }
-        
-        .mode-description {
-            text-align: center;
-            margin-bottom: 15px;
-            opacity: 0.8;
+        .button-row { display: flex; gap: 10px; margin-top: 10px; }
+        .button-row .btn { flex: 1; }
+        .btn-secondary {
+            background: var(--bg-light-rgba);
+            border: 1px solid var(--border-color-rgba);
+            color: var(--gradient-start);
+            margin-top: 0; /* Override default margin for this context */
         }
-        
-        .copied-badge {
-            display: inline-block;
-            background: rgba(0, 242, 254, 0.2);
-            color: #00f2fe;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-left: 15px;
-            animation: fadeOut 2s forwards;
-        }
-        
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; transform: translateY(-100%); }
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-left: 10px;
-            font-size: 14px;
-            background: rgba(0, 242, 254, 0.2);
-        }
-        
-        .length-info {
-            margin: 10px 0;
-            opacity: 0.8;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px 15px;
-            }
-            
-            .config-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .config-item {
-                padding: 8px;
-            }
+        .btn-secondary:hover {
+             background: var(--bg-mid-rgba);
+             border-color: var(--gradient-end);
+             color: #fff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>用户验证码生成工具</h1>
+        <h1>DST Mod 高级工具集</h1>
         
-        <div class="input-container">
-            <label for="user-id">请输入用户ID（格式示例：KU_hjXTcooF）</label>
-            <input type="text" id="user-id" placeholder="KU_hjXTcooF" autocomplete="off">
-        </div>
-        
-        <button id="generate-btn" class="btn">生成验证码</button>
-        
-        <div id="result" class="result">
-            <h2 class="result-heading">验证码生成结果</h2>
-            <div class="result-content">
-                <p>用户ID: <strong id="user-id-display"></strong></p>
-                
-                <div class="code-block">
-                    生成的验证码: <span id="verification-code"></span>
-                    <span id="clipboard-status" class="status"></span>
+        <section id="decoder">
+            <!-- ... Decoder HTML ... -->
+            <h2>错误码解密工具</h2>
+            <div class="input-group">
+                <label for="errorCodeInput">输入错误码 <small>格式示例: A6nar1W0</small></label>
+                <input type="text" id="errorCodeInput" placeholder="从服务器日志获取的错误码">
+            </div>
+            <button id="decodeButton" class="btn">解密并自动生成/预测</button>
+            <div id="decoderResult" class="result-section">
+                 <div class="result-display-panel">
+                    <span>原始科雷ID:</span> <strong id="decodedIdDisplay"></strong>
+                    <span id="decodedIdCopyStatus" class="copy-status"></span>
+                 </div>
+            </div>
+        </section>
+
+        <hr class="separator">
+
+        <section id="generator">
+            <!-- ... Generator HTML ... -->
+            <h2>验证码生成 & 错误码预测</h2>
+            <div class="input-group">
+                <label for="kleiIdInput">输入科雷ID <small>格式示例: KU_HkU4huTw</small></label>
+                <input type="text" id="kleiIdInput" placeholder="KU_... (可由上方自动填充)">
+            </div>
+            <button id="generateButton" class="btn">独立生成/预测</button>
+            <div id="generatorResult" class="result-section">
+                <h3 class="result-heading">Mod配置项</h3>
+                <p class="helper-text">请将以下数值分别填入Mod的 A-J 配置项中</p>
+                <div id="configGridContainer">
+                    <div class="config-row" id="online-config"></div>
+                    <div class="config-row" id="offline-config"></div>
                 </div>
-                
-                <p class="length-info">长度验证: <strong id="code-length">0</strong>位</p>
-                
-                <div class="server-config">
-                    <h3 class="mode-title">联机模式配置（前5位）</h3>
-                    <div class="config-grid" id="online-config"></div>
-                    
-                    <h3 class="mode-title">离线模式配置（后5位）</h3>
-                    <div class="config-grid" id="offline-config"></div>
+                <div style="margin-top: 30px;">
+                    <div class="result-display-panel">
+                        <span>预测错误码:</span> <strong id="predictedErrorCodeDisplay"></strong>
+                        <span id="predictedErrorCodeCopyStatus" class="copy-status"></span>
+                    </div>
+                    <div class="result-display-panel">
+                        <span>10位验证码:</span> <strong id="finalCodeDisplay"></strong>
+                        <span id="finalCodeCopyStatus" class="copy-status"></span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userIdInput = document.getElementById('user-id');
-            const generateBtn = document.getElementById('generate-btn');
-            const resultSection = document.getElementById('result');
-            const userIdDisplay = document.getElementById('user-id-display');
-            const verificationCodeDisplay = document.getElementById('verification-code');
-            const codeLengthDisplay = document.getElementById('code-length');
-            const clipboardStatus = document.getElementById('clipboard-status');
-            const onlineConfig = document.getElementById('online-config');
-            const offlineConfig = document.getElementById('offline-config');
-            
-            // 生成验证码的函数
-            function generateVerificationCode(userId) {
-                // 步骤1: 去掉用户ID前缀'KU_'
-                let processedId = userId.replace("KU_", "");
-                
-                // 步骤2: 加密计算
-                let encrypted = 0;
-                for (let i = 0; i < processedId.length; i++) {
-                    const char = processedId[i];
-                    const asciiVal = char.charCodeAt(0);
-                    // 核心加密算法: (当前值+ASCII) * 7 + (ASCII % 16)
-                    encrypted = (encrypted + asciiVal) * 7 + (asciiVal % 16);
-                }
-                
-                // 将加密值转换为字符串
-                let encryptedStr = String(encrypted);
-                
-                // 处理长度不足的情况：左侧补0到9位
-                if (encryptedStr.length < 9) {
-                    encryptedStr = '0'.repeat(9 - encryptedStr.length) + encryptedStr;
-                }
-                
-                // 步骤3: 生成验证码
-                // 前5位联机模式
-                const onlinePart = encryptedStr.substring(0, 5);
-                // 后5位离线模式（从第5位开始取5个字符）
-                const offlinePart = encryptedStr.substring(4, 9);
-                
-                // 拼接完整验证码
-                return onlinePart + offlinePart;
-            }
-            
-            // 生成配置项HTML
-            function generateConfigHTML(code, mode) {
-                const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-                const startIndex = (mode === 'online') ? 0 : 5;
-                const configType = (mode === 'online') ? '联机模式' : '离线模式';
-                
-                let html = '';
-                for (let i = 0; i < 5; i++) {
-                    const position = startIndex + i;
-                    html += `
-                    <div class="config-item">
-                        <span class="config-label">${labels[position]}</span>
-                        <span class="config-value">${code[position]}</span>
+        </section>
+
+        <hr class="separator">
+
+        <section id="customization">
+             <h2>更多服务</h2>
+             <div class="footer-actions">
+                 <div class="action-group">
+                    <button id="customizeButton" class="btn">定制服务端</button>
+                    <small id="currentLinkDisplay"></small>
+                    <span id="customizeCopyStatus" class="copy-status" style="margin: 5px auto 0;"></span>
+                 </div>
+                 <div class="action-group">
+                    <input type="text" id="workshopIdInput" placeholder="输入新的订阅ID或完整链接">
+                    <div class="button-row">
+                        <button id="updateLinkButton" class="btn btn-secondary">更改订阅</button>
+                        <button id="resetLinkButton" class="btn btn-secondary">重置</button>
                     </div>
-                    `;
-                }
-                return html;
+                 </div>
+             </div>
+        </section>
+
+    </div>
+
+    <script>
+        const NORMAL_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-";
+        const SCRAMBLED_ALPHABET = "zKe9aVbLc-dMfYpZ8r7s6t5u4v3w2x1y0iIFGHEJDCBAgQhRjSkTlUmWnXo";
+        const STORAGE_KEY = 'dstToolWorkshopUrl';
+        const DEFAULT_URL = 'https://steamcommunity.com/sharedfiles/filedetails/?id=3496110672';
+
+        const el = {
+            // ... (previous elements)
+            decodeButton: document.getElementById('decodeButton'),
+            errorCodeInput: document.getElementById('errorCodeInput'),
+            decoderResult: document.getElementById('decoderResult'),
+            decodedIdDisplay: document.getElementById('decodedIdDisplay'),
+            decodedIdCopyStatus: document.getElementById('decodedIdCopyStatus'),
+            generatorSection: document.getElementById('generator'),
+            generateButton: document.getElementById('generateButton'),
+            kleiIdInput: document.getElementById('kleiIdInput'),
+            generatorResult: document.getElementById('generatorResult'),
+            finalCodeDisplay: document.getElementById('finalCodeDisplay'),
+            finalCodeCopyStatus: document.getElementById('finalCodeCopyStatus'),
+            predictedErrorCodeDisplay: document.getElementById('predictedErrorCodeDisplay'),
+            predictedErrorCodeCopyStatus: document.getElementById('predictedErrorCodeCopyStatus'),
+            onlineConfig: document.getElementById('online-config'),
+            offlineConfig: document.getElementById('offline-config'),
+            // ... (customization elements)
+            customizeButton: document.getElementById('customizeButton'),
+            currentLinkDisplay: document.getElementById('currentLinkDisplay'),
+            customizeCopyStatus: document.getElementById('customizeCopyStatus'),
+            workshopIdInput: document.getElementById('workshopIdInput'),
+            updateLinkButton: document.getElementById('updateLinkButton'),
+            resetLinkButton: document.getElementById('resetLinkButton'), // New element
+        };
+
+        // --- Core Functions (No changes) ---
+        function deobfuscateId(obfuscatedId) { /* ... same as before ... */
+            let result = '';
+            for (const char of obfuscatedId) {
+                const pos = SCRAMBLED_ALPHABET.indexOf(char);
+                result += (pos !== -1) ? NORMAL_ALPHABET[pos] : char;
             }
-            
-            // 复制到剪贴板的函数
-            async function copyToClipboard(text) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    return {success: true, message: "【已复制到剪贴板】"};
-                } catch (err) {
-                    return {success: false, message: `【剪贴板复制失败：${err}】`};
-                }
+            return result;
+        }
+        function obfuscateId(idPart) { /* ... same as before ... */
+            let result = '';
+            for (const char of idPart) {
+                const pos = NORMAL_ALPHABET.indexOf(char);
+                result += (pos !== -1) ? SCRAMBLED_ALPHABET[pos] : char;
             }
-            
-            // 生成验证码按钮点击事件
-            generateBtn.addEventListener('click', async function() {
-                const userId = userIdInput.value.trim();
-                
-                // 验证输入是否有效
-                if (!userId) {
-                    alert("输入不能为空！");
-                    return;
-                }
-                
-                // 如果输入不以"KU_"开头，自动添加
-                const finalUserId = userId.startsWith('KU_') ? userId : 'KU_' + userId;
-                
-                // 生成验证码
-                const verificationCode = generateVerificationCode(finalUserId);
-                
-                // 复制到剪贴板
-                const copyResult = await copyToClipboard(verificationCode);
-                
-                // 显示结果
-                userIdDisplay.textContent = finalUserId;
-                verificationCodeDisplay.textContent = verificationCode;
-                codeLengthDisplay.textContent = verificationCode.length;
-                clipboardStatus.textContent = copyResult.message;
-                clipboardStatus.style.color = copyResult.success ? '#00f2fe' : '#ff4d4d';
-                
-                // 生成服务器配置建议
-                onlineConfig.innerHTML = generateConfigHTML(verificationCode, 'online');
-                offlineConfig.innerHTML = generateConfigHTML(verificationCode, 'offline');
-                
-                // 显示结果区域
-                resultSection.style.display = 'block';
-                
-                // 自动滚动到结果区域
-                resultSection.scrollIntoView({ behavior: 'smooth' });
-            });
-            
-            // 按回车键也能触发生成
-            userIdInput.addEventListener('keyup', function(event) {
-                if (event.key === 'Enter') {
-                    generateBtn.click();
-                }
-            });
+            return result;
+        }
+        function generateVerificationCode(kleiId) { /* ... same as before ... */
+            if (!kleiId || !kleiId.toUpperCase().startsWith('KU_') || kleiId.length <= 3) return null;
+            const idPart = kleiId.substring(3);
+            let encrypted = 0;
+            for (const char of idPart) {
+                const asciiVal = char.charCodeAt(0);
+                encrypted = (encrypted + asciiVal) * 7 + (asciiVal % 16);
+                encrypted = encrypted >>> 0;
+            }
+            let encryptedStr = encrypted.toString().padStart(9, '0');
+            const finalCode = encryptedStr.substring(0, 5) + encryptedStr.substring(4, 9);
+            return { finalCode };
+        }
+        function runGenerator() { /* ... same as before ... */
+            const kleiId = el.kleiIdInput.value.trim();
+            if (!kleiId || !kleiId.toUpperCase().startsWith('KU_')) {
+                alert('请输入有效的科雷ID (必须以 KU_ 开头)！');
+                el.generatorResult.classList.remove('visible'); return;
+            }
+            const verificationResult = generateVerificationCode(kleiId);
+            if (!verificationResult) return;
+            el.finalCodeDisplay.textContent = verificationResult.finalCode;
+            copyToClipboard(verificationResult.finalCode, el.finalCodeCopyStatus, "验证码已自动复制!");
+            const predictedError = obfuscateId(kleiId.substring(3));
+            el.predictedErrorCodeDisplay.textContent = predictedError;
+            const labels = ['A','B','C','D','E','F','G','H','I','J'];
+            let onlineHtml = '', offlineHtml = '';
+            for(let i=0; i<5; i++) onlineHtml += `<div class="config-item"><span class="config-label">${labels[i]}</span><span class="config-value">${verificationResult.finalCode[i]}</span></div>`;
+            for(let i=5; i<10; i++) offlineHtml += `<div class="config-item"><span class="config-label">${labels[i]}</span><span class="config-value">${verificationResult.finalCode[i]}</span></div>`;
+            el.onlineConfig.innerHTML = onlineHtml;
+            el.offlineConfig.innerHTML = offlineHtml;
+            el.generatorResult.classList.add('visible');
+        }
+        async function copyToClipboard(text, statusElement, message = '已复制!') { /* ... same as before ... */
+            if(!text) return;
+            try { await navigator.clipboard.writeText(text); statusElement.textContent = message; statusElement.classList.add('visible'); setTimeout(() => statusElement.classList.remove('visible'), 2500); } catch (err) { console.error(`复制失败: ${err}`); statusElement.textContent = '复制失败'; statusElement.classList.add('visible'); setTimeout(() => statusElement.classList.remove('visible'), 2500); }
+        }
+        
+        // --- Customization Functions ---
+        function normalizeUrl(input) {
+            if (!input) return DEFAULT_URL;
+            if (/^\d+$/.test(input)) return `https://steamcommunity.com/sharedfiles/filedetails/?id=${input}`;
+            if (input.startsWith('http')) return input;
+            return DEFAULT_URL;
+        }
+        function initializeCustomLink() {
+            const savedUrl = localStorage.getItem(STORAGE_KEY) || DEFAULT_URL;
+            el.customizeButton.dataset.url = savedUrl;
+            el.currentLinkDisplay.textContent = `当前: ${savedUrl}`;
+        }
+
+        // --- Event Listeners ---
+        el.decodeButton.addEventListener('click', () => { /* ... same as before ... */
+            const errorCode = el.errorCodeInput.value.trim();
+            if (!errorCode) { alert('请输入错误码！'); return; }
+            const fullKleiId = "KU_" + deobfuscateId(errorCode);
+            el.decodedIdDisplay.textContent = fullKleiId;
+            el.decoderResult.classList.add('visible');
+            copyToClipboard(fullKleiId, el.decodedIdCopyStatus, "ID已自动复制!");
+            el.kleiIdInput.value = fullKleiId;
+            runGenerator();
+            el.generatorSection.scrollIntoView({ behavior: 'smooth' });
+            el.generatorSection.classList.add('highlight-section');
+            setTimeout(() => { el.generatorSection.classList.remove('highlight-section'); }, 1500);
         });
+        el.generateButton.addEventListener('click', runGenerator);
+        document.body.addEventListener('click', (e) => {
+            if (e.target.matches('#decodedIdDisplay, #finalCodeDisplay, #predictedErrorCodeDisplay')) {
+                const targetId = e.target.id;
+                const statusEl = el[targetId.replace('Display', 'CopyStatus')];
+                copyToClipboard(e.target.textContent, statusEl);
+            }
+        });
+        el.updateLinkButton.addEventListener('click', () => {
+            const newUrlInput = el.workshopIdInput.value.trim();
+            if (!newUrlInput) { alert('请输入新的订阅ID或链接！'); return; }
+            const newUrl = normalizeUrl(newUrlInput);
+            localStorage.setItem(STORAGE_KEY, newUrl);
+            initializeCustomLink();
+            alert('链接已更新并保存！');
+            el.workshopIdInput.value = '';
+        });
+        el.customizeButton.addEventListener('click', async () => {
+            const urlToOpen = el.customizeButton.dataset.url;
+            await copyToClipboard(urlToOpen, el.customizeCopyStatus, '链接已复制!');
+            setTimeout(() => { window.open(urlToOpen, '_blank'); }, 300);
+        });
+        // New Event Listener for Reset Button
+        el.resetLinkButton.addEventListener('click', () => {
+            if (confirm('确定要将链接重置为默认值吗？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                initializeCustomLink(); // Refresh the UI to show the default link
+                alert('链接已重置为默认值！');
+            }
+        });
+
+        // --- Initialize Page ---
+        initializeCustomLink();
     </script>
 </body>
 </html>
