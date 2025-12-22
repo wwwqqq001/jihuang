@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FFmpeg 视频处理工具 ([60]前缀版)</title>
-    <!-- 必须引入这个脚本来修复GitHub Pages的Header问题 -->
     <script src="coi-serviceworker.js"></script>
-    <!-- 引入 FFmpeg.wasm -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
-    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+    
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js" crossorigin></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js" crossorigin></script>
+    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; background: #f4f4f4; }
         .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -17,9 +17,9 @@
         .upload-area:hover { border-color: #666; background: #fafafa; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
         button:disabled { background: #ccc; cursor: not-allowed; }
-        #log { background: #1e1e1e; color: #0f0; padding: 1rem; border-radius: 4px; height: 200px; overflow-y: auto; font-family: monospace; margin-top: 1rem; white-space: pre-wrap; font-size: 12px; }
-        .file-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 4px; }
-        .download-link { color: #28a745; font-weight: bold; text-decoration: none; }
+        #log { background: #1e1e1e; color: #0f0; padding: 1rem; border-radius: 4px; height: 250px; overflow-y: auto; font-family: monospace; margin-top: 1rem; white-space: pre-wrap; font-size: 12px; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 4px; border: 1px solid #eee; }
+        .download-link { color: #28a745; font-weight: bold; text-decoration: underline; }
         .status { font-size: 0.9em; color: #666; }
     </style>
 </head>
@@ -28,7 +28,7 @@
 <div class="container">
     <h1>FFmpeg 批量处理工具</h1>
     <p>功能：输入文件 timestamps 放大2倍 (播放变慢/时长翻倍)，无损复制流。</p>
-    <p style="color:red; font-size:0.9em;">注意：文件处理是在浏览器本地进行的，不会上传到服务器。大文件可能会导致浏览器卡顿。</p>
+    <p style="color:red; font-size:0.85em;">提示：处理过程完全在浏览器本地进行。如果卡住，请检查控制台或尝试刷新。</p>
 
     <div class="upload-area" onclick="document.getElementById('uploader').click()">
         <p>点击选择或拖入文件 (支持多选)</p>
@@ -37,14 +37,16 @@
 
     <div id="file-list"></div>
     
-    <button id="start-btn" onclick="startProcessing()" disabled>加载组件中...</button>
+    <button id="start-btn" onclick="startProcessing()" disabled>正在初始化内核...</button>
 
     <div id="log">等待操作...</div>
 </div>
 
 <script>
-    const { FFmpeg } = FFmpegWASM;
-    const { fetchFile } = FFmpegWASMUtil;
+    // 确保从全局对象中正确提取 FFmpeg 模块
+    const getFFmpeg = () => window.FFmpegWASM || {};
+    const getUtil = () => window.FFmpegWASMUtil || {};
+
     let ffmpeg = null;
     let selectedFiles = [];
 
@@ -59,36 +61,43 @@
 
     // 初始化 FFmpeg
     async function loadFFmpeg() {
-        log('正在加载 FFmpeg 核心...');
+        log('正在检测 FFmpeg 组件...');
+        
+        // 稍微等待确保脚本解析完成
+        if (!window.FFmpegWASM) {
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        const { FFmpeg } = getFFmpeg();
+        const { toBlobURL } = getUtil();
+
+        if (!FFmpeg) {
+            log('错误: 无法加载 FFmpeg 脚本。请检查网络或是否添加了 crossorigin 属性。');
+            return;
+        }
+
         ffmpeg = new FFmpeg();
         
         ffmpeg.on('log', ({ message }) => {
-            // 过滤一些冗长的日志，只显示关键信息
-            if(message.includes('frame=') || message.includes('Output')) {
+            if(message.includes('frame=') || message.includes('Output') || message.includes('Error')) {
                 log(message);
             }
         });
 
         try {
-            // 加载核心文件 (多线程版本)
+            log('正在加载 WASM 核心 (约 30MB)...');
+            // 使用 toBlobURL 绕过跨域限制
             await ffmpeg.load({
                 coreURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js`, 'text/javascript'),
                 wasmURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm`, 'application/wasm'),
             });
-            log('FFmpeg 加载完成！请选择文件。');
-            startBtn.textContent = "开始处理";
+            log('FFmpeg 初始化成功！现在可以上传文件了。');
+            startBtn.textContent = "开始批量处理";
             startBtn.disabled = false;
         } catch (e) {
-            log('FFmpeg 加载失败: ' + e.message);
+            log('加载失败: ' + e.message);
             console.error(e);
-            log('提示: 请确保该页面运行在 localhost 或 HTTPS 环境，并配置了正确的 COOP/COEP Headers (使用 coi-serviceworker)');
         }
-    }
-
-    // 辅助函数：加载远程资源为 Blob URL
-    async function toBlobURL(url, mimeType) {
-        const buf = await (await fetch(url)).arrayBuffer();
-        return URL.createObjectURL(new Blob([buf], { type: mimeType }));
     }
 
     // 文件选择监听
@@ -103,8 +112,8 @@
             const div = document.createElement('div');
             div.className = 'file-item';
             div.innerHTML = `
-                <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                <span id="status-${index}" class="status">待处理</span>
+                <span>${file.name}</span>
+                <span id="status-${index}" class="status">等待中</span>
             `;
             fileListDiv.appendChild(div);
         });
@@ -112,11 +121,9 @@
 
     // 核心处理逻辑
     async function startProcessing() {
-        if (selectedFiles.length === 0) {
-            alert("请先选择文件！");
-            return;
-        }
+        if (!ffmpeg || selectedFiles.length === 0) return;
 
+        const { fetchFile } = getUtil();
         startBtn.disabled = true;
         
         for (let i = 0; i < selectedFiles.length; i++) {
@@ -124,55 +131,50 @@
             const statusSpan = document.getElementById(`status-${i}`);
             
             statusSpan.innerText = "处理中...";
-            statusSpan.style.color = "blue";
+            statusSpan.style.color = "#007bff";
             
-            const inputName = "input_" + i + "_" + file.name; // 避免文件名特殊字符
-            const outputName = "[60]" + file.name;
+            const inputName = `input_${i}_${Date.now()}`; 
+            const outputName = `[60]${file.name}`;
 
             try {
                 log(`\n>>> 正在处理: ${file.name}`);
 
-                // 1. 将文件写入 FFmpeg 虚拟内存
+                // 写入文件到内存
                 await ffmpeg.writeFile(inputName, await fetchFile(file));
 
-                // 2. 执行命令
-                // 对应命令: ffmpeg -itsscale 2 -i input -c:v copy -c:a copy output
-                // 注意: -itsscale 是 input option，必须放在 -i 之前
+                // 执行命令: 时长翻倍 (itsscale 2)
                 await ffmpeg.exec([
                     '-itsscale', '2',
                     '-i', inputName,
-                    '-c:v', 'copy',
-                    '-c:a', 'copy',
+                    '-c', 'copy', // 无损复制音视频流
                     outputName
                 ]);
 
-                // 3. 读取生成的文件
+                // 读取结果
                 const data = await ffmpeg.readFile(outputName);
-                
-                // 4. 创建下载链接
                 const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
                 
-                statusSpan.innerHTML = `<a href="${url}" download="${outputName}" class="download-link">下载处理后的文件</a>`;
+                statusSpan.innerHTML = `<a href="${url}" download="${outputName}" class="download-link">点击下载</a>`;
+                statusSpan.style.color = "#28a745";
                 log(`<<< 完成: ${outputName}`);
 
-                // 5. 清理内存 (重要！)
+                // 清理内存
                 await ffmpeg.deleteFile(inputName);
                 await ffmpeg.deleteFile(outputName);
 
             } catch (err) {
                 console.error(err);
-                statusSpan.innerText = "失败";
+                statusSpan.innerText = "处理失败";
                 statusSpan.style.color = "red";
                 log(`错误: ${err.message}`);
             }
         }
 
         startBtn.disabled = false;
-        log('\n所有任务处理完成！');
-        alert('处理完成！');
+        log('\n--- 所有任务处理完毕 ---');
     }
 
-    // 页面加载后启动
+    // 自动启动
     loadFFmpeg();
 </script>
 
